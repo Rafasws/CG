@@ -4,21 +4,45 @@ var camera, scene, renderer;
 var tree, skyDome, ufo, moon,geometry, material,mesh;
 var ufoDirection = new THREE.Vector3(0, 0, 0);
 var directionalLight, ambientLight, spotLight;
-var clock = new THREE.Clock();
 
 var pointLights = [];
 
-var clock = new THREE.Clock();
-
-var ufoBody, ufoCockpit;
+var clock;
 
 var heightMap=[];
 
-var moonMaterials = [];
+var objects = [];
 
-const movementSpeed = 1;
+const movementSpeed = 15;
 let movementX = 0;
 let movementZ = 0;
+
+
+function createMaterials(mesh, color, emissive, intensity, texture) {
+    mesh.materials = {
+        'lambert': new THREE.MeshLambertMaterial({map: texture, 
+            color: color,
+            emissive: emissive, 
+            emissiveIntensity: intensity,
+            side: THREE.DoubleSide }),
+        'phong': new THREE.MeshPhongMaterial({map: texture, 
+            color: color, 
+            emissive: emissive, 
+            emissiveIntensity: intensity,
+            side: THREE.DoubleSide}),
+        'toon': new THREE.MeshToonMaterial({map: texture, 
+            color: color, 
+            emissive: emissive, 
+            emissiveIntensity: intensity,
+            side: THREE.DoubleSide}),
+        'basic': new THREE.MeshBasicMaterial({map: texture, color: color})
+    };
+    
+    mesh.material = mesh.materials['phong'];
+    objects.push(mesh);
+}
+
+
 
 
 
@@ -29,21 +53,20 @@ function createUFO(x, y, z) {
 
     const bodyGeometry = new THREE.SphereGeometry(2, 32, 32);
     bodyGeometry.scale(4,1,4);
-    const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa, wireframe: true });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    const body = new THREE.Mesh(bodyGeometry);
+    createMaterials(body, 0xaaaaaa, null, null, null);
     ufo.add(body);
 
 
     // Create the cockpit (spherical dome)
     const cockpitGeometry = new THREE.SphereGeometry(5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 4);
-    const cockpitMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true });
+    const cockpitMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
     const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
     cockpit.position.set(body.position.x, body.position.y - 1.7, body.position.z); 
     ufo.add(cockpit);
 
     const windowGeometry = new THREE.SphereGeometry(3.97, 32, 16, 0, Math.PI * 2, 0.7, 0.05);
     const windowMaterial = new THREE.MeshPhongMaterial({ color: 0x2adbd2, 
-        wireframe: true,
         emissive: 0x2adbd2,
         emissiveIntensity: 0.3 });
     const window = new THREE.Mesh(windowGeometry, windowMaterial);
@@ -72,7 +95,6 @@ function createUFO(x, y, z) {
     // Create the flat cylinder in the center of the bottom part
     const cylinderGeometry = new THREE.CylinderGeometry(3, 3, 0.5, 30);
     const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0x2adbd2, 
-        wireframe: true,
         emissive:0x2adbd2,
         emissiveIntensity: 0.3 });
     const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
@@ -81,7 +103,6 @@ function createUFO(x, y, z) {
 
     const ringGeometry = new THREE.CylinderGeometry(3, 3, 0.5, 30);
     const ringMaterial = new THREE.MeshPhongMaterial({ color: 0x2adbd2, 
-        wireframe: true,
         emissive:0x2adbd2,
         emissiveIntensity: 0.3 });
     const ring = new THREE.Mesh(ringGeometry, ringMaterial);
@@ -94,13 +115,12 @@ function createUFO(x, y, z) {
     ufo.add(target);
     // Criar a luz spotlight apontada para baixo
 
-    spotLight = new THREE.SpotLight(0xffffff, 2, 0, 0.2, 0.2, 1);
+    spotLight = new THREE.SpotLight(0xffffff, 10, 100, 0.4, 0.1);
     spotLight.target = target;
     ufo.add(target);
 
     
-    const spotHelper = new THREE.SpotLightHelper(spotLight);
-    scene.add(spotHelper);
+   
     
     
     // Position the entire UFO object
@@ -168,6 +188,9 @@ function getHeightData(scale) {
             geometry.attributes.position.array[i + 2] = heightMap[j];
             j++;
         }
+        geometry.computeVertexNormals(); // Compute normals for proper lighting
+        geometry.normalizeNormals();
+
         var arrayDots = geometry.attributes.position.array;
         console.log(arrayDots.length/3 );
         for (let i = 0; i < 1000; i++) {
@@ -183,12 +206,8 @@ function getHeightData(scale) {
 
         var texture = createFlowerField();
 
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-    
-        texture.repeat.set(2, 3);
-
-        const material = new THREE.MeshLambertMaterial({ wireframe: true, map: texture });
+        
+        const material = new THREE.MeshPhongMaterial({  map: texture });
         
             // Create a mesh using the geometry and material
         const terrain = new THREE.Mesh(geometry, material);
@@ -282,41 +301,23 @@ function createStarrySky() {
 
 
 function createMoon(x, y, z) {
-    var moonGeometry = new THREE.SphereGeometry(5, 32, 32);
+    var moonGeometry = new THREE.SphereGeometry(100, 32, 32);
 
     var textureLoader = new THREE.TextureLoader();
-    var texture = textureLoader.load('./assets/lroc_color_poles_1k.jpg');
-
-    var moonPhongMaterial = new THREE.MeshPhongMaterial({ map: texture,
-        emissive: 0xfaea84, 
-        emissiveIntensity: 0.4, 
-        wireframe: false });
-    moonMaterials.push(moonPhongMaterial);
-    
-    var moonLambertMaterial = new THREE.MeshLambertMaterial({ map: texture,
-        emissive: 0xfaea84, 
-        emissiveIntensity: 0.4, 
-        wireframe: false });
-    moonMaterials.push(moonLambertMaterial);
-    
-    var moonToonMaterial = new THREE.MeshToonMaterial({ map: texture,
-        emissive: 0xfaea84, 
-        emissiveIntensity: 0.4, 
-        wireframe: false });
-    moonMaterials.push(moonToonMaterial);
-        
+    var texture = textureLoader.load('./assets/lroc_color_poles_1k.jpg'); 
         
 
 
 
-    moon = new THREE.Mesh(moonGeometry, moonMaterials[0]);
+    moon = new THREE.Mesh(moonGeometry);
+    createMaterials(moon, null, 0xfaea84, 0.5, texture);
 
     moon.position.set(x, y ,z);
     scene.add(moon);
 }    
 
 function addSkyDome() {
-    var skyGeometry = new THREE.SphereGeometry(900, 60, 40);  
+    var skyGeometry = new THREE.SphereGeometry(4000, 60, 40);  
 
     var texture = createStarrySky();
 
@@ -328,9 +329,8 @@ function addSkyDome() {
 
     var skyMaterial = new THREE.MeshPhongMaterial({
         map: texture,
-        wireframe: true,
         emissive: 0xffffff,
-        emissiveIntensity: 0.2,
+        emissiveIntensity: 0.1,
         side: THREE.BackSide // Renderizar apenas a parte de trás da esfera
     });
     skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
@@ -346,12 +346,12 @@ function addSkyDome() {
 function createIllumination() {
 
     // Iluminação Global
-    directionalLight = new THREE.DirectionalLight(0xffffe0, 0.8); // Luz branca com intensidade máxima
+    directionalLight = new THREE.DirectionalLight(0xffffe0, 0.4); // Luz branca com intensidade máxima
     directionalLight.position.set(400, 350, 500); // Ângulo de incidência da luz
     scene.add(directionalLight);
 
     // Luz Ambiente
-    ambientLight = new THREE.AmbientLight(0x333333, 0.5); // Intensidade baixa (tom amarelado ajustado através do material e luz direcional)
+    ambientLight = new THREE.AmbientLight(0x333333, 0.3); // Intensidade baixa (tom amarelado ajustado através do material e luz direcional)
     scene.add(ambientLight);
 
     
@@ -397,7 +397,7 @@ function createTree(x, y, z, scale, angle) {
 
 function createCylinder(obj, x, y, z) {
     'use strict';
-    material = new THREE.MeshPhongMaterial({ color: 0xa52000, wireframe: false });
+    material = new THREE.MeshPhongMaterial({ color: 0xa52000 });
     geometry = new THREE.CylinderGeometry(2, 2, 12, 32);
     mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = Math.PI;
@@ -413,7 +413,7 @@ function createScene() {
     scene = new THREE.Scene();
 
     createHouse(-55, 83, 37);
-    createMoon(-200, 100, 50);
+    createMoon(-3000, 350, -1000);
     createIllumination();
     addSkyDome();
    
@@ -476,7 +476,8 @@ function onKeyDown(e) {
         case 68:
             directionalLight.visible = !directionalLight.visible;
             break;
-        case 80:
+        case 81:
+
             
     }
 }
@@ -510,7 +511,7 @@ function init() {
 
     renderer.xr.enabled = true;
 
-
+    clock = new THREE.Clock()
     createCamera();
 
     createScene();
@@ -530,9 +531,10 @@ function animate() {
     renderer.setAnimationLoop( function () {
         var delta = clock.getDelta();
 
-        ufo.position.x += movementX;
-        ufo.position.z += movementZ;
-        moon.rotation.y += 0.005; // Rotação da lua
+        ufo.position.x += movementX * delta;
+        ufo.position.z += movementZ * delta;
+        ufo.rotation.y += 3 * delta;
+        moon.rotation.y += 0.1 * delta; // Rotação da lua
         render();
     
     } );
