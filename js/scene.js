@@ -89,11 +89,14 @@ function createUFO(x, y, z) {
     ufo.add(ring);
 
 
-
-    
+    var target = new THREE.Object3D();
+    target.position.set(body.position.x, body.position.y - 20, body.position.z); 
+    ufo.add(target);
     // Criar a luz spotlight apontada para baixo
 
     spotLight = new THREE.SpotLight(0xffffff, 2, 0, 0.2, 0.2, 1);
+    spotLight.target = target;
+    ufo.add(target);
 
     
     const spotHelper = new THREE.SpotLightHelper(spotLight);
@@ -104,9 +107,13 @@ function createUFO(x, y, z) {
     ufo.position.set(x, y, z);
 
     ufo.scale.set(4, 4, 4);
+
     spotLight.position.set(x, - 1.8, z);
+
     ufo.add(spotLight);
+
     scene.add(ufo);
+
 }
 
 function getRandomMultipleOfThree(x) {
