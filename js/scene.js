@@ -1,9 +1,10 @@
 
 var camera, scene, renderer;
 
-var tree, skyDome, ufo, moon,geometry, material,mesh;
-var ufoDirection = new THREE.Vector3(0, 0, 0);
+var tree, skyDome, terrain, ufo, moon,geometry, material,mesh;
 var directionalLight, ambientLight, spotLight;
+
+var skyTexture, terrainTexture;
 
 var pointLights = [];
 
@@ -13,7 +14,7 @@ var heightMap=[];
 
 var objects = [];
 
-const movementSpeed = 15;
+const movementSpeed = 70;
 let movementX = 0;
 let movementZ = 0;
 
@@ -60,30 +61,28 @@ function createUFO(x, y, z) {
 
     // Create the cockpit (spherical dome)
     const cockpitGeometry = new THREE.SphereGeometry(5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 4);
-    const cockpitMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
+    const cockpit = new THREE.Mesh(cockpitGeometry);
+    createMaterials(cockpit, 0xffffff, null, null, null);
     cockpit.position.set(body.position.x, body.position.y - 1.7, body.position.z); 
     ufo.add(cockpit);
 
     const windowGeometry = new THREE.SphereGeometry(3.97, 32, 16, 0, Math.PI * 2, 0.7, 0.05);
-    const windowMaterial = new THREE.MeshPhongMaterial({ color: 0x2adbd2, 
-        emissive: 0x2adbd2,
-        emissiveIntensity: 0.3 });
-    const window = new THREE.Mesh(windowGeometry, windowMaterial);
+    
+    const window = new THREE.Mesh(windowGeometry);
+    createMaterials(window, 0x2adbd2, 0x2adbd2, 0.3, null);
     window.position.set(body.position.x, body.position.y-0.4, body.position.z)
     ufo.add(window);
 
 
     // Create the small spheres at the bottom of the ship
     const sphereGeometry = new THREE.SphereGeometry(0.3, 8, 8);
-    const sphereMaterial = new THREE.MeshPhongMaterial({ color: 0x2adbd2,
-        emissive: 0x2adbd2,
-        emissiveIntensity: 0.3});
+    
 
     const radius = 6;
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
-      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      const sphere = new THREE.Mesh(sphereGeometry);
+      createMaterials(sphere, 0x2adbd2, 0x2adbd2, 0.5, null);
       sphere.position.set(Math.cos(angle) * radius, -1.2, Math.sin(angle) * radius ); // Swap Y and Z coordinates
       const pointLight = new THREE.PointLight(0xffffff, 0.8, 50);
       pointLight.position.set(sphere.position.x, sphere.position.y, sphere.position.z)
@@ -94,18 +93,14 @@ function createUFO(x, y, z) {
   
     // Create the flat cylinder in the center of the bottom part
     const cylinderGeometry = new THREE.CylinderGeometry(3, 3, 0.5, 30);
-    const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0x2adbd2, 
-        emissive:0x2adbd2,
-        emissiveIntensity: 0.3 });
-    const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+    const cylinder = new THREE.Mesh(cylinderGeometry);
+    createMaterials(cylinder, 0x2adbd2, 0x2adb2, 0.5, null);
     cylinder.position.set(body.position.x, body.position.y - 1.8, body.position.z); 
     ufo.add(cylinder);
 
     const ringGeometry = new THREE.CylinderGeometry(3, 3, 0.5, 30);
-    const ringMaterial = new THREE.MeshPhongMaterial({ color: 0x2adbd2, 
-        emissive:0x2adbd2,
-        emissiveIntensity: 0.3 });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    const ring = new THREE.Mesh(ringGeometry);
+    createMaterials(ring, 0x2adbd2, 0x2adbd2, 0.5, null);
     ring.position.set(body.position.x, body.position.y - 1.8, body.position.z)
     ufo.add(ring);
 
@@ -204,16 +199,14 @@ function getHeightData(scale) {
 
         geometry.computeVertexNormals(); // Compute normals for proper lighting
 
-        var texture = createFlowerField();
-
         
-        const material = new THREE.MeshPhongMaterial({  map: texture });
         
-            // Create a mesh using the geometry and material
-        const terrain = new THREE.Mesh(geometry, material);
+        // Create a mesh using the geometry and material
+        terrain = new THREE.Mesh(geometry);
+        createMaterials(terrain, null, null, null, null);
         terrain.rotation.x = -Math.PI/2;
             
-            // Add the terrain to the scene
+        // Add the terrain to the scene
         scene.add(terrain);
       };
 
@@ -258,7 +251,7 @@ function createFlowerField() {
 
 function createStarrySky() {
    
-    const skyTextureSize = 9000;
+    const skyTextureSize = 5000;
     const skyCanvas = document.createElement("canvas");
     skyCanvas.width = skyTextureSize;
     skyCanvas.height = skyTextureSize;
@@ -318,23 +311,8 @@ function createMoon(x, y, z) {
 
 function addSkyDome() {
     var skyGeometry = new THREE.SphereGeometry(4000, 60, 40);  
-
-    var texture = createStarrySky();
-
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-
-    texture.repeat.set(1, 1);
-
-
-    var skyMaterial = new THREE.MeshPhongMaterial({
-        map: texture,
-        emissive: 0xffffff,
-        emissiveIntensity: 0.1,
-        side: THREE.BackSide // Renderizar apenas a parte de trás da esfera
-    });
-    skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
-
+    skyDome = new THREE.Mesh(skyGeometry);
+    createMaterials(skyDome, null, 0xffffff, 0.1, null);
 
 
     skyDome.position.set(0,-50,0);
@@ -363,26 +341,27 @@ function createTree(x, y, z, scale, angle) {
 
     createCylinder(tree, 0, 0, 0);
 
-    material = new THREE.MeshPhongMaterial({ color: 0x00d200 } );
     geometry = new THREE.SphereGeometry(3, 32, 16);
     geometry.scale(2, 1, 1);
-    mesh = new THREE.Mesh(geometry, material);
+    mesh = new THREE.Mesh(geometry);
+    createMaterials(mesh, 0x00d200, null, null, null);
     mesh.position.set(0, 8.5, 0);
   
     tree.add(mesh);
     
-    material = new THREE.MeshPhongMaterial({ color: 0xa52000 });
     geometry = new THREE.CylinderGeometry(0.5, 0.5, 4, 32);
-    mesh = new THREE.Mesh(geometry, material);
+    mesh = new THREE.Mesh(geometry);
+    createMaterials(mesh, 0xa52000, null, null, null);
     mesh.position.set(-3, 3, 0);
     mesh.rotation.z += Math.PI / 4;
  
     tree.add(mesh);
 
-    material = new THREE.MeshPhongMaterial({ color: 0x00d200 } );
+   
     geometry = new THREE.SphereGeometry(0.5, 32, 16);
     geometry.scale(2, 1, 1);
-    mesh = new THREE.Mesh(geometry, material);
+    mesh = new THREE.Mesh(geometry);
+    createMaterials(mesh, 0x00d200, null, null, null);
     mesh.position.set(-4.7, 4.7, 0);
     mesh.rotation.z += Math.PI / 4;
   
@@ -397,9 +376,10 @@ function createTree(x, y, z, scale, angle) {
 
 function createCylinder(obj, x, y, z) {
     'use strict';
-    material = new THREE.MeshPhongMaterial({ color: 0xa52000 });
+    
     geometry = new THREE.CylinderGeometry(2, 2, 12, 32);
     mesh = new THREE.Mesh(geometry, material);
+    createMaterials(mesh, 0xa52000, null, null, null);
     mesh.rotation.x = Math.PI;
     mesh.rotation.z = Math.PI;
     mesh.position.set(x, y, z);
@@ -462,7 +442,6 @@ function onKeyDown(e) {
         case 40: // Down arrow key
             movementZ = movementSpeed;
             break;
-        case 65: //A
         case 97: //a
             scene.traverse(function (node) {
                 if (node instanceof THREE.Mesh) {
@@ -470,15 +449,53 @@ function onKeyDown(e) {
                 }
             });
             break;
-        case 69:  //E
-        case 101: //e
-            break;
         case 68:
             directionalLight.visible = !directionalLight.visible;
             break;
-        case 81:
+        case 81:  // Q Lambert
+            objects.forEach(mesh => {
+                mesh.material = mesh.materials['lambert'];
+            });
+            break;
+        case 87:  // W Phong
+            objects.forEach(mesh => {
+                mesh.material = mesh.materials['phong'];
+            });
+            break;
+        case 69:  // E Toon
+            objects.forEach(mesh => {
+                mesh.material = mesh.materials['toon'];
+            });
+            break;
+        case 82:  // R no illumination
+            objects.forEach(mesh => {
+                mesh.material = mesh.materials['basic'];
+            });
+            break;
+        case 80:
+            pointLights.forEach(light => {
+                light.visible = !light.visible;
+            });
+            break;
+        case 83:
+            spotLight.visible = !spotLight.visible;
+            break;
+        case 50:
+            var texture = createStarrySky();
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(1, 1);
 
-            
+            skyDome.material.map = texture;
+            skyDome.material.needsUpdate = true;
+            break;
+        case 49:
+            var texture = createFlowerField();
+            terrain.material.map = texture;
+            terrain.material.needsUpdate = true;
+            break;
+
+        
     }
 }
 function onKeyUp(event) {

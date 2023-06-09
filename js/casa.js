@@ -72,8 +72,9 @@ function createDoor(obj, x, y, z){
     geometryDoor.computeVertexNormals();
     geometryDoor.normalizeNormals();
   
-    materialDoor = new THREE.MeshPhongMaterial({ color: 0xd2b48c });
-    meshDoor = new THREE.Mesh(geometryDoor, materialDoor);
+    
+    meshDoor = new THREE.Mesh(geometryDoor);
+    createMaterials(meshDoor, 0xd2b48c, null, null, null);
     addEdges(meshDoor, geometryDoor);
     obj.add(meshDoor);
     meshDoor.position.set(x, y, z);
@@ -119,8 +120,8 @@ function createDoor(obj, x, y, z){
     
     // Create mesh
   
-    materialRoof = new THREE.MeshPhongMaterial({ color: 0xff0000 });
     meshRoof = new THREE.Mesh(geometryRoof, materialRoof);
+    createMaterials(meshRoof, 0xff0000, null, null, null);
     addEdges(meshRoof, geometryRoof);
     obj.add(meshRoof);
     meshRoof.rotation.y = Math.PI/2;
@@ -170,8 +171,8 @@ function createDoor(obj, x, y, z){
         geometryChimney.normalizeNormals();
         
 
-        materialChimney = new THREE.MeshPhongMaterial({ color: 0xffffff });
-        meshChimney = new THREE.Mesh(geometryChimney, materialChimney);
+        meshChimney = new THREE.Mesh(geometryChimney);
+        createMaterials(meshChimney, 0xffffff, null, null, null);
         addEdges(meshChimney, geometryChimney);
         chimney.add(meshChimney);
         chimney.position.set(x, y, z);
@@ -219,8 +220,8 @@ function createDoor(obj, x, y, z){
 
 
 
-        materialCross = new THREE.MeshPhongMaterial({ color: 0xd2b48c });
-        meshCross = new THREE.Mesh(geometryCross, materialCross);
+        meshCross = new THREE.Mesh(geometryCross);
+        createMaterials(meshCross, 0xd2b48c, null, null, null);
         addEdges(meshCross, geometryCross);
         cross.add(meshCross);
         cross.position.set(x, y, z);
@@ -254,8 +255,8 @@ function createDoor(obj, x, y, z){
 
 
 
-        materialGlass = new THREE.MeshPhongMaterial({ color: 0x9cf5ff });
-        meshGlass = new THREE.Mesh(geometryGlass, materialGlass);
+        meshGlass = new THREE.Mesh(geometryGlass);
+        createMaterials(meshGlass, 0x9cf5ff, null, null, null);
 
         glass.add(meshGlass);
         glass.position.set(x, y, z);
@@ -302,8 +303,9 @@ function createDoor(obj, x, y, z){
 
 
 
-        materialWindow = new THREE.MeshPhongMaterial({ color: 0x0000ff });
-        meshWindow = new THREE.Mesh(geometryWindow, materialWindow);
+        
+        meshWindow = new THREE.Mesh(geometryWindow);
+        createMaterials(meshWindow, 0x0000ff, null, null, null);
         addEdges(meshWindow, geometryWindow);
         window.add(meshWindow);
         
@@ -460,8 +462,9 @@ function createBaseboard(obj, x, y, z){
 
 
 
-    materialBaseboard = new THREE.MeshPhongMaterial({ color: 0x0000ff });
-    meshBaseboard = new THREE.Mesh(geometryBaseboard, materialBaseboard);
+   
+    meshBaseboard = new THREE.Mesh(geometryBaseboard);
+    createMaterials(meshBaseboard, 0x0000ff, null, null, null);
     addEdges(meshBaseboard, geometryBaseboard);
     baseboard.add(meshBaseboard);
 
@@ -617,10 +620,8 @@ function createBase(obj, x, y, z) {
     geometryBase.computeVertexNormals();
     geometryBase.normalizeNormals();
 
-
-
-    materialBase = new THREE.MeshPhongMaterial({ color: 0xDDDDDD });
-    meshBase = new THREE.Mesh(geometryBase, materialBase);
+    meshBase = new THREE.Mesh(geometryBase);
+    createMaterials(meshBase, 0xDDDDDD, null, null, null);
     addEdges(meshBase, geometryBase);
     base.add(meshBase);
     
@@ -770,8 +771,9 @@ function createHouse(x, y, z) {
     geometryHouse.normalizeNormals();
     
     // Create mesh
-    materialHouse = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    meshHouse = new THREE.Mesh(geometryHouse, materialHouse);
+    meshHouse = new THREE.Mesh(geometryHouse);
+    createMaterials(meshHouse, 0xffffff, null, null, null);
+
     //addEdges(meshHouse, geometryHouse);
     house.add(meshHouse);
     createBase(house,0,0,0);
