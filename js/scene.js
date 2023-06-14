@@ -527,6 +527,7 @@ function init() {
     document.body.appendChild(VRButton.createButton(renderer));
 
     renderer.xr.enabled = true;
+    renderer.xr.setUserCamera( camera );
 
     clock = new THREE.Clock()
     createCamera();
