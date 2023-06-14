@@ -527,8 +527,6 @@ function init() {
     document.body.appendChild(VRButton.createButton(renderer));
 
     renderer.xr.enabled = true;
-    renderer.xr.getCamera().position.copy( camera.position);
-
     renderer.xr.getCamera().lookAt( camera.target );
 
     clock = new THREE.Clock()
